@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Audiobook AI
 
 Plataforma moderna para criação automática de audiobooks com narração, trilha sonora e vozes distintas para personagens.
@@ -26,3 +27,6 @@ Plataforma moderna para criação automática de audiobooks com narração, tril
 ---
 
 Projeto em desenvolvimento 🚀 
+=======
+# audioBook
+>>>>>>> 8c2e0355e1bb7e288551ac2a72a944c5e7b53388
