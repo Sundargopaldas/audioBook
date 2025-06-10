@@ -1,0 +1,3 @@
+Este é um teste de narração com Google Cloud Text-to-Speech.
+O sistema deve converter este texto em áudio usando uma voz de alta qualidade em português brasileiro.
+Vamos testar se a narração está funcionando corretamente! 

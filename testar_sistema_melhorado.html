@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Audiobook - Teste Completo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background: #eef0ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-area.dragover {
+            background: #e0e5ff;
+            border-color: #4c51bf;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        button.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        #status {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .info { background: #e3f2fd; color: #1976d2; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .warning { background: #fff3e0; color: #ef6c00; }
+        
+        audio {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #f5f5f5;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Sistema de Audiobook - Painel de Controle</h1>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total de Audiobooks</div>
+                <div class="stat-value" id="totalAudiobooks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Arquivos de Upload</div>
+                <div class="stat-value" id="totalUploads">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Arquivos de Áudio</div>
+                <div class="stat-value" id="totalAudioFiles">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Espaço Usado</div>
+                <div class="stat-value" id="totalSpace">0 MB</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('upload')">📤 Upload</div>
+            <div class="tab" onclick="showTab('audiobooks')">📚 Audiobooks</div>
+            <div class="tab" onclick="showTab('files')">📁 Arquivos</div>
+            <div class="tab" onclick="showTab('debug')">🔧 Debug</div>
+        </div>
+        
+        <!-- Tab Upload -->
+        <div id="upload-tab" class="tab-content active">
+            <h2>📤 Criar Novo Audiobook</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <p>📁 Clique aqui ou arraste um arquivo</p>
+                <p style="color: #666; font-size: 14px;">Formatos aceitos: TXT, PDF, DOCX</p>
+            </div>
+            
+            <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+            <button id="uploadBtn" onclick="uploadFile()">🚀 Gerar Audiobook com Música</button>
+            
+            <div id="status"></div>
+            <div id="audioContainer"></div>
+        </div>
+        
+        <!-- Tab Audiobooks -->
+        <div id="audiobooks-tab" class="tab-content">
+            <h2>📚 Audiobooks Criados</h2>
+            <button onclick="loadAudiobooks()" class="secondary">🔄 Atualizar Lista</button>
+            <div id="audiobooksList" class="file-list"></div>
+        </div>
+        
+        <!-- Tab Files -->
+        <div id="files-tab" class="tab-content">
+            <h2>📁 Arquivos no Sistema</h2>
+            <button onclick="loadFiles()" class="secondary">🔄 Atualizar Lista</button>
+            
+            <h3>Arquivos de Upload</h3>
+            <div id="uploadsList" class="file-list"></div>
+            
+            <h3>Arquivos de Áudio</h3>
+            <div id="audioFilesList" class="file-list"></div>
+        </div>
+        
+        <!-- Tab Debug -->
+        <div id="debug-tab" class="tab-content">
+            <h2>🔧 Informações de Debug</h2>
+            <button onclick="loadDebugInfo()" class="secondary">🔄 Atualizar</button>
+            <pre id="debugInfo"></pre>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api/v1';
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        // Click para selecionar arquivo
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateUploadArea(files[0].name);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                updateUploadArea(e.target.files[0].name);
+            }
+        });
+        
+        function updateUploadArea(filename) {
+            uploadArea.innerHTML = `
+                <p>📄 Arquivo selecionado:</p>
+                <p style="font-weight: bold; color: #667eea;">${filename}</p>
+            `;
+        }
+        
+        function showTab(tabName) {
+            // Esconder todas as tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar tab selecionada
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Carregar dados da tab
+            if (tabName === 'audiobooks') {
+                loadAudiobooks();
+            } else if (tabName === 'files') {
+                loadFiles();
+            } else if (tabName === 'debug') {
+                loadDebugInfo();
+            }
+        }
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const statusDiv = document.getElementById('status');
+            const audioContainer = document.getElementById('audioContainer');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '<p class="warning">⚠️ Por favor, selecione um arquivo!</p>';
+                statusDiv.className = 'warning';
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            statusDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p class="info">🎵 Processando seu audiobook com música de fundo...</p>
+                <p style="font-size: 14px; color: #666;">Isso pode levar alguns segundos</p>
+            `;
+            statusDiv.className = 'info';
+            audioContainer.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Resposta do servidor:', data);
+                    
+                    if (data.status === 'completed' && data.audio_url) {
+                        statusDiv.innerHTML = `
+                            <p class="success">✅ Audiobook gerado com sucesso!</p>
+                            <p style="font-size: 14px; color: #666;">🎵 Música de fundo adicionada</p>
+                        `;
+                        statusDiv.className = 'success';
+                        audioContainer.innerHTML = `
+                            <h3>🎧 Seu audiobook está pronto:</h3>
+                            <audio controls src="${data.audio_url}"></audio>
+                            <br>
+                            <button onclick="window.open('${data.audio_url}', '_blank')">
+                                💾 Baixar Audiobook
+                            </button>
+                        `;
+                        
+                        // Atualizar estatísticas
+                        updateStats();
+                    }
+                } else {
+                    const error = await response.text();
+                    statusDiv.innerHTML = `<p class="error">❌ Erro: ${error}</p>`;
+                    statusDiv.className = 'error';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <p class="error">❌ Erro de conexão: ${error.message}</p>
+                    <p style="font-size: 14px;">Verifique se o backend está rodando na porta 8001</p>
+                `;
+                statusDiv.className = 'error';
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        async function loadAudiobooks() {
+            const container = document.getElementById('audiobooksList');
+            container.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/`);
+                if (response.ok) {
+                    const audiobooks = await response.json();
+                    
+                    if (audiobooks.length === 0) {
+                        container.innerHTML = '<p>Nenhum audiobook encontrado.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = audiobooks.map(audiobook => `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <strong>${audiobook.title}</strong><br>
+                                Status: ${audiobook.status}<br>
+                                ID: ${audiobook.id}
+                            </div>
+                            <div class="file-actions">
+                                ${audiobook.audio_url ? `
+                                    <button onclick="playAudio('${audiobook.audio_url}')">▶️ Tocar</button>
+                                    <button onclick="window.open('${audiobook.audio_url}', '_blank')">💾 Baixar</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="error">Erro ao carregar audiobooks</p>';
+                }
+            } catch (error) {
+                container.innerHTML = '<p class="error">Erro de conexão</p>';
+            }
+        }
+        
+        async function loadFiles() {
+            const uploadsContainer = document.getElementById('uploadsList');
+            const audioFilesContainer = document.getElementById('audioFilesList');
+            
+            uploadsContainer.innerHTML = '<div class="spinner"></div>';
+            audioFilesContainer.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/files/list`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Mostrar uploads
+                    if (data.uploads.length === 0) {
+                        uploadsContainer.innerHTML = '<p>Nenhum arquivo de upload encontrado.</p>';
+                    } else {
+                        uploadsContainer.innerHTML = data.uploads.map(file => `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <strong>${file.filename}</strong><br>
+                                    Tamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                                    Modificado: ${new Date(file.modified).toLocaleString('pt-BR')}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    // Mostrar arquivos de áudio
+                    if (data.audiofiles_dir.length === 0) {
+                        audioFilesContainer.innerHTML = '<p>Nenhum arquivo de áudio encontrado.</p>';
+                    } else {
+                        audioFilesContainer.innerHTML = data.audiofiles_dir.map(file => `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <strong>${file.filename}</strong><br>
+                                    Tamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                                    Modificado: ${new Date(file.modified).toLocaleString('pt-BR')}
+                                </div>
+                                <div class="file-actions">
+                                    <button onclick="playAudio('${file.url}')">▶️ Tocar</button>
+                                    <button onclick="window.open('${file.url}', '_blank')">💾 Baixar</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    // Atualizar estatísticas
+                    updateStatsFromData(data);
+                } else {
+                    uploadsContainer.innerHTML = '<p class="error">Erro ao carregar arquivos</p>';
+                    audioFilesContainer.innerHTML = '<p class="error">Erro ao carregar arquivos</p>';
+                }
+            } catch (error) {
+                uploadsContainer.innerHTML = '<p class="error">Erro de conexão</p>';
+                audioFilesContainer.innerHTML = '<p class="error">Erro de conexão</p>';
+            }
+        }
+        
+        async function loadDebugInfo() {
+            const debugContainer = document.getElementById('debugInfo');
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/files/list`);
+                if (response.ok) {
+                    const data = await response.json();
+                    debugContainer.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    debugContainer.textContent = 'Erro ao carregar informações de debug';
+                }
+            } catch (error) {
+                debugContainer.textContent = 'Erro de conexão: ' + error.message;
+            }
+        }
+        
+        function playAudio(url) {
+            const audioContainer = document.getElementById('audioContainer');
+            audioContainer.innerHTML = `
+                <h3>🎧 Reproduzindo:</h3>
+                <audio controls autoplay src="${url}"></audio>
+            `;
+            
+            // Voltar para a aba de upload
+            showTab('upload');
+        }
+        
+        async function updateStats() {
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/files/list`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatsFromData(data);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+        
+        function updateStatsFromData(data) {
+            document.getElementById('totalAudiobooks').textContent = data.audiobooks.length;
+            document.getElementById('totalUploads').textContent = data.uploads.length;
+            document.getElementById('totalAudioFiles').textContent = data.audiofiles_dir.length;
+            
+            // Calcular espaço total
+            let totalSize = 0;
+            data.uploads.forEach(file => totalSize += file.size);
+            data.audiofiles_dir.forEach(file => totalSize += file.size);
+            
+            document.getElementById('totalSpace').textContent = (totalSize / 1024 / 1024).toFixed(2) + ' MB';
+        }
+        
+        // Carregar estatísticas ao iniciar
+        updateStats();
+    </script>
+</body>
+</html> 

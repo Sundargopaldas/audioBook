@@ -7,12 +7,15 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 celery==5.3.6
 redis==5.0.1
-boto3==1.29.3
+boto3==1.28.57
 python-dotenv==1.0.0
 alembic==1.12.1
 # psycopg2-binary==2.9.9
 pymysql==1.1.0
 pytesseract==0.3.10
-gTTS==2.4.0
+gTTS==2.3.2
 PyPDF2==3.0.1
-python-docx==1.0.1 
+python-docx==1.0.1
+google-cloud-texttospeech==2.16.3
+docx2txt==0.8
+pydub==0.25.1 

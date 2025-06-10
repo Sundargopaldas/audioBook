@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from app.db.base_class import Base
+from app.db.base_class import Base # Alterado
 
 class User(Base):
     __tablename__ = "user"
@@ -10,4 +10,4 @@ class User(Base):
     full_name = Column(String(255), nullable=True)
     is_active = Column(Integer, default=1)
     
-    audiobooks = relationship("Audiobook", back_populates="user") 
+    audiobooks = relationship("Audiobook", back_populates="user")

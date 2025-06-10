@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "fit-aloe-460813-s1",
+  "private_key_id": "ad1c63bd821472974e48bca4ea0afef525659835",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6A9J/QDd4gD7B\n8Be0g4kSPQw5X1plH/Y4GeckEnnZRlC/Yqwa+8TsdBzO09vtxoU1kBBSpFl3qouT\nfGOu2/ZKX+bdQ+U8nH2yl9lElkSeYEjee026/xrppl1vrW89MMHCGk99VSm6sM7H\nOmXQmuLI2frsTJoeQznCpQ5vzdDSDsMUJbqYlXRBIvgqRzHQb9Xt7qGim2OzncsL\n46Xey2iDe/zmHsEOZk13xIXZu+SJJgUQowDjeIC9Nl3U2UKjCCyxLbkfFLzU40mj\nQoqpshgpY/dK0j7Y6JIkktbaE4przmgicUKQXq+/W56NH1FtBTW95IV18rp5rZpm\nq0H4SD7NAgMBAAECggEAKRo3nM0ihLKny2BDSKyo8NoC9blzZrV3iUF2ANNBT+iY\n5pVFzMeVpZ7pj60iI2nynNmKtcwhhc7uPQZnG2f4xcnnoDxErs4wezJQ/LYMjwdd\nCqYp0JhWiMrtSgRDeHypz7tTFbFoAVvYsQ6fGUdkNbfu2WB6zJWTsYYZyMwsaIGf\n6a1pY5r+QVZmWUmeDcyjrF9/eRg+Zk4TfJZPwLHxRvpyglj0cmH4/LsGGki5kLjB\nGhxsmRncGwdR01/pNjwufy5yLz/pQ/WyyVUEjwr2Vltycf9ieX5i+W31nZB41AM0\n+73FMZKCyadT+ixrDEGAvH9k03xtmy4vPLWxiF+IEQKBgQD1923BobbObADohZ6o\n4Hw2J9rvEte+gqXVb3OJ/ZECKpDd7MmdoiNXUaTr4K9Dln/qgfrIsIUlNixx5s8D\nHW0LZWcyeRYdk32FILwTJIkyTNM4SkeQe/lQXhTS5QfMwhypnYmb4y8SWHLLR8sV\nH9AQcKXWpqbbEuOOROPc0dbh3QKBgQDBmlU/lVZyB7LFKrB5o3Ev7vaUgLvsq+pR\n8MiLzJ71FMdnGpyywTyjtnE5UBFtMSKRrJlLqqCRUb2l3Aoj+hjldVHjgNRL04ZY\nCFILavyv8By/EKG5k9TuNKm0twsEmcUsJV5KHNmfXsRGDMG72ZVikuO7hJkH/ib6\nU97t242ZsQKBgDHg7Sb5DkMp7703a4c/jrDEwEb/ATUm9U4k/b8b5o4T57C5VeFb\ngeMxMUqME76XBHWfyiVsdnOnWrf2YEB3dSd8dsLrfyqcQDYA/2K6ZAAJSEP//Cc2\nnMZJbdueikhhjMJwqfksxtznhs/mTS6Jdv3+egLfZLLET9UH71VWUEcZAoGBAKyj\n/Erz159dwAvUMoR1u/Q7ioUIewvkjdI9/ge0EzeHLP2DHKLGcFWo1jR+ctvFCgeP\nOy/fWsnbc1tY6W4Fknfjc3+FHUr0uAL+gHMQF36ohmnW4fCDpEg6i+7LnzaeDNZ+\nCCPcsC9OqYWx0Hy73VuGky9fYbtf5tApRE0lEJMxAoGAMkmKjKkyM7EtiTllTAyc\nK3HfoyzT774IH/LQ7fHnur5zUzpp2WZoz8ZUH4/FSDkbXBnpFUDE2oVwfGRDrjmI\n/fHAVVd4SShpVKV/630TNq1i6zxskmgRfIEJqExkktaf0VnVJOnCUXV5u/v/yYwq\nyynOo5vc0RGIf9CbhsJ99OI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "tts-service-account@fit-aloe-460813-s1.iam.gserviceaccount.com",
+  "client_id": "100667901820379034407",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/tts-service-account%40fit-aloe-460813-s1.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+} 

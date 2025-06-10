@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Completo - Audiobook AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .log {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Completo - Audiobook AI</h1>
+    
+    <!-- Teste 1: Conexão com Backend -->
+    <div class="container">
+        <h2>1. Teste de Conexão</h2>
+        <button onclick="testConnection()">Testar Conexão com Backend</button>
+        <div id="connectionLog" class="log"></div>
+    </div>
+    
+    <!-- Teste 2: Autenticação -->
+    <div class="container">
+        <h2>2. Teste de Autenticação</h2>
+        <button onclick="testAuth()">Criar/Obter Token de Teste</button>
+        <div id="authLog" class="log"></div>
+    </div>
+    
+    <!-- Teste 3: Upload com Autenticação -->
+    <div class="container">
+        <h2>3. Upload com Autenticação</h2>
+        <input type="file" id="authFile" accept=".txt,.pdf,.docx">
+        <button onclick="uploadWithAuth()">Upload com Token</button>
+        <div id="authUploadLog" class="log"></div>
+        <div id="authAudioContainer"></div>
+    </div>
+    
+    <!-- Teste 4: Upload sem Autenticação -->
+    <div class="container">
+        <h2>4. Upload sem Autenticação (Endpoint de Teste)</h2>
+        <input type="file" id="noAuthFile" accept=".txt,.pdf,.docx">
+        <button onclick="uploadNoAuth()">Upload sem Token</button>
+        <div id="noAuthLog" class="log"></div>
+        <div id="noAuthAudioContainer"></div>
+    </div>
+    
+    <!-- Teste 5: Verificar Arquivo Estático -->
+    <div class="container">
+        <h2>5. Teste de Arquivo Estático</h2>
+        <input type="text" id="audioId" placeholder="ID do audiobook (ex: 1)" style="padding: 5px;">
+        <button onclick="testStaticFile()">Testar Arquivo</button>
+        <div id="staticLog" class="log"></div>
+        <div id="staticAudioContainer"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api/v1';
+        let token = null;
+        
+        function log(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Teste 1: Conexão
+        async function testConnection() {
+            log('connectionLog', 'Testando conexão com backend...', 'info');
+            try {
+                const response = await fetch('http://localhost:8001/');
+                if (response.ok) {
+                    const data = await response.json();
+                    log('connectionLog', `✓ Backend respondendo: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log('connectionLog', `✗ Erro HTTP: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('connectionLog', `✗ Erro de conexão: ${error.message}`, 'error');
+                log('connectionLog', 'Verifique se o backend está rodando em http://localhost:8001', 'error');
+            }
+        }
+        
+        // Teste 2: Autenticação
+        async function testAuth() {
+            log('authLog', 'Criando/obtendo token de teste...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/auth/test-user`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.access_token;
+                    localStorage.setItem('token', token);
+                    log('authLog', `✓ Token obtido: ${token.substring(0, 20)}...`, 'success');
+                } else {
+                    const error = await response.text();
+                    log('authLog', `✗ Erro ao obter token: ${error}`, 'error');
+                }
+            } catch (error) {
+                log('authLog', `✗ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 3: Upload com Auth
+        async function uploadWithAuth() {
+            const fileInput = document.getElementById('authFile');
+            if (!fileInput.files[0]) {
+                log('authUploadLog', '✗ Selecione um arquivo primeiro!', 'error');
+                return;
+            }
+            
+            if (!token) {
+                log('authUploadLog', '✗ Obtenha um token primeiro (Teste 2)!', 'error');
+                return;
+            }
+            
+            log('authUploadLog', `Fazendo upload de: ${fileInput.files[0].name}`, 'info');
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('authUploadLog', `✓ Upload concluído! ID: ${data.id}`, 'success');
+                    log('authUploadLog', `Status: ${data.status}`, 'info');
+                    
+                    if (data.audio_url) {
+                        log('authUploadLog', `✓ Áudio disponível: ${data.audio_url}`, 'success');
+                        document.getElementById('authAudioContainer').innerHTML = `
+                            <h4>Áudio gerado:</h4>
+                            <audio controls src="${data.audio_url}"></audio>
+                        `;
+                    }
+                } else {
+                    const error = await response.text();
+                    log('authUploadLog', `✗ Erro: ${error}`, 'error');
+                }
+            } catch (error) {
+                log('authUploadLog', `✗ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 4: Upload sem Auth
+        async function uploadNoAuth() {
+            const fileInput = document.getElementById('noAuthFile');
+            if (!fileInput.files[0]) {
+                log('noAuthLog', '✗ Selecione um arquivo primeiro!', 'error');
+                return;
+            }
+            
+            log('noAuthLog', `Fazendo upload de: ${fileInput.files[0].name}`, 'info');
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`${API_URL}/audiobooks/test-no-auth`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('noAuthLog', `✓ Upload concluído! ID: ${data.id}`, 'success');
+                    log('noAuthLog', `Status: ${data.status}`, 'info');
+                    
+                    if (data.audio_url) {
+                        log('noAuthLog', `✓ Áudio disponível: ${data.audio_url}`, 'success');
+                        document.getElementById('noAuthAudioContainer').innerHTML = `
+                            <h4>Áudio gerado:</h4>
+                            <audio controls src="${data.audio_url}"></audio>
+                        `;
+                    }
+                } else {
+                    const error = await response.text();
+                    log('noAuthLog', `✗ Erro: ${error}`, 'error');
+                }
+            } catch (error) {
+                log('noAuthLog', `✗ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste 5: Arquivo Estático
+        async function testStaticFile() {
+            const audioId = document.getElementById('audioId').value;
+            if (!audioId) {
+                log('staticLog', '✗ Digite um ID de audiobook!', 'error');
+                return;
+            }
+            
+            const audioUrl = `http://localhost:8001/static/${audioId}_audio.mp3`;
+            log('staticLog', `Testando URL: ${audioUrl}`, 'info');
+            
+            try {
+                const response = await fetch(audioUrl, { method: 'HEAD' });
+                if (response.ok) {
+                    log('staticLog', '✓ Arquivo encontrado!', 'success');
+                    document.getElementById('staticAudioContainer').innerHTML = `
+                        <h4>Áudio:</h4>
+                        <audio controls src="${audioUrl}"></audio>
+                    `;
+                } else {
+                    log('staticLog', `✗ Arquivo não encontrado (HTTP ${response.status})`, 'error');
+                }
+            } catch (error) {
+                log('staticLog', `✗ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // Carregar token salvo
+        window.onload = function() {
+            const savedToken = localStorage.getItem('token');
+            if (savedToken) {
+                token = savedToken;
+                log('authLog', 'Token carregado do localStorage', 'info');
+            }
+        };
+    </script>
+</body>
+</html> 

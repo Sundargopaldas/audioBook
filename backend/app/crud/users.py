@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from app.models.user import User
-from app.schemas.user import UserCreate
-from app.core.security import get_password_hash
+from app.models.user import User # Alterado
+from app.schemas.user import UserCreate # Alterado
+from app.core.security import get_password_hash # Alterado
 
 class CRUDUser:
     def get_by_email(self, db: Session, email: str):
@@ -18,4 +18,4 @@ class CRUDUser:
         db.refresh(db_obj)
         return db_obj
 
-users = CRUDUser() 
+users = CRUDUser()

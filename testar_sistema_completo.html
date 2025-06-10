@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Sistema de Audiobook com Música de Fundo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            background: #eef0ff;
+            border-color: #764ba2;
+        }
+        .upload-area.dragover {
+            background: #e0e5ff;
+            border-color: #4c51bf;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        #status {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .info { background: #e3f2fd; color: #1976d2; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .warning { background: #fff3e0; color: #ef6c00; }
+        
+        audio {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .feature {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .feature h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Sistema de Audiobook com Música de Fundo</h1>
+        
+        <div class="feature">
+            <h3>✨ Recursos do Sistema:</h3>
+            <ul>
+                <li>📝 Converte texto em narração usando Google Cloud TTS</li>
+                <li>🎵 Adiciona música de fundo automaticamente</li>
+                <li>🔊 Volume da música ajustado para não sobrepor a narração</li>
+                <li>🎼 Fade in/out suave de 3 segundos</li>
+                <li>📁 Suporta arquivos TXT, PDF e DOCX</li>
+            </ul>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Clique aqui ou arraste um arquivo</p>
+            <p style="color: #666; font-size: 14px;">Formatos aceitos: TXT, PDF, DOCX</p>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+        <button id="uploadBtn" onclick="uploadFile()">🚀 Gerar Audiobook com Música</button>
+        
+        <div id="status"></div>
+        <div id="audioContainer"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api/v1';
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        // Click para selecionar arquivo
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateUploadArea(files[0].name);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                updateUploadArea(e.target.files[0].name);
+            }
+        });
+        
+        function updateUploadArea(filename) {
+            uploadArea.innerHTML = `
+                <p>📄 Arquivo selecionado:</p>
+                <p style="font-weight: bold; color: #667eea;">${filename}</p>
+            `;
+        }
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const statusDiv = document.getElementById('status');
+            const audioContainer = document.getElementById('audioContainer');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '<p class="warning">⚠️ Por favor, selecione um arquivo!</p>';
+                statusDiv.className = 'warning';
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            statusDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p class="info">🎵 Processando seu audiobook com música de fundo...</p>
+                <p style="font-size: 14px; color: #666;">Isso pode levar alguns segundos</p>
+            `;
+            statusDiv.className = 'info';
+            audioContainer.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                // Usar o endpoint de teste sem autenticação
+                const response = await fetch(`${API_URL}/audiobooks/test-no-auth`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Resposta do servidor:', data);
+                    
+                    if (data.status === 'completed' && data.audio_url) {
+                        statusDiv.innerHTML = `
+                            <p class="success">✅ Audiobook gerado com sucesso!</p>
+                            <p style="font-size: 14px; color: #666;">🎵 Música de fundo adicionada</p>
+                        `;
+                        statusDiv.className = 'success';
+                        audioContainer.innerHTML = `
+                            <h3>🎧 Seu audiobook está pronto:</h3>
+                            <audio controls src="${data.audio_url}"></audio>
+                            <br>
+                            <button onclick="window.open('${data.audio_url}', '_blank')">
+                                💾 Baixar Audiobook
+                            </button>
+                            <div class="feature" style="margin-top: 20px;">
+                                <p><strong>Dica:</strong> Aumente o volume para ouvir melhor a música de fundo!</p>
+                            </div>
+                        `;
+                    } else {
+                        // Aguardar processamento
+                        statusDiv.innerHTML = '<p class="info">⏳ Processando... Aguarde...</p>';
+                        checkStatus(data.id);
+                    }
+                } else {
+                    const error = await response.text();
+                    statusDiv.innerHTML = `<p class="error">❌ Erro: ${error}</p>`;
+                    statusDiv.className = 'error';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <p class="error">❌ Erro de conexão: ${error.message}</p>
+                    <p style="font-size: 14px;">Verifique se o backend está rodando na porta 8001</p>
+                `;
+                statusDiv.className = 'error';
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        async function checkStatus(audiobookId) {
+            const statusDiv = document.getElementById('status');
+            const audioContainer = document.getElementById('audioContainer');
+            
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_URL}/audiobooks/${audiobookId}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.status === 'completed' && data.audio_url) {
+                            clearInterval(interval);
+                            statusDiv.innerHTML = `
+                                <p class="success">✅ Audiobook gerado com sucesso!</p>
+                                <p style="font-size: 14px; color: #666;">🎵 Música de fundo adicionada</p>
+                            `;
+                            statusDiv.className = 'success';
+                            audioContainer.innerHTML = `
+                                <h3>🎧 Seu audiobook está pronto:</h3>
+                                <audio controls src="${data.audio_url}"></audio>
+                                <br>
+                                <button onclick="window.open('${data.audio_url}', '_blank')">
+                                    💾 Baixar Audiobook
+                                </button>
+                            `;
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            statusDiv.innerHTML = `<p class="error">❌ Erro: ${data.error}</p>`;
+                            statusDiv.className = 'error';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar status:', error);
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html> 

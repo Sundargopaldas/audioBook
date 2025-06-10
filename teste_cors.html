@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste CORS</title>
+</head>
+<body>
+    <h1>Teste de CORS</h1>
+    <button onclick="testar()">Testar Conexão</button>
+    <pre id="resultado"></pre>
+    
+    <script>
+        async function testar() {
+            const resultado = document.getElementById('resultado');
+            
+            try {
+                // Teste 1: Endpoint raiz
+                const response1 = await fetch('http://localhost:8001/');
+                const data1 = await response1.json();
+                resultado.textContent += 'Teste 1 - Raiz: ' + JSON.stringify(data1) + '\n\n';
+                
+                // Teste 2: Docs
+                const response2 = await fetch('http://localhost:8001/docs');
+                resultado.textContent += 'Teste 2 - Docs: Status ' + response2.status + '\n\n';
+                
+                // Teste 3: POST sem autenticação
+                const response3 = await fetch('http://localhost:8001/api/v1/audiobooks/', {
+                    method: 'POST'
+                });
+                resultado.textContent += 'Teste 3 - POST: Status ' + response3.status + ' - ' + (await response3.text()) + '\n\n';
+                
+            } catch (error) {
+                resultado.textContent = 'Erro: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 

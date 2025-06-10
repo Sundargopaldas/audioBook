@@ -1,9 +1,9 @@
 from typing import List, Optional
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from app.crud.base import CRUDBase
-from app.models.audiobook import Audiobook
-from app.schemas.audiobook import AudiobookCreate, AudiobookUpdate
+from app.crud.base import CRUDBase  # Alterado
+from app.models.audiobook import Audiobook  # Alterado
+from app.schemas.audiobook import AudiobookCreate, AudiobookUpdate  # Alterado
 
 class CRUDAudiobook(CRUDBase[Audiobook, AudiobookCreate, AudiobookUpdate]):
     def get_multi_by_user(
@@ -49,4 +49,4 @@ class CRUDAudiobook(CRUDBase[Audiobook, AudiobookCreate, AudiobookUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-audiobooks = CRUDAudiobook(Audiobook) 
+audiobooks = CRUDAudiobook(Audiobook)

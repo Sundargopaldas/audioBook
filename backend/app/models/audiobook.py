@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Text, DateTime
 from sqlalchemy.orm import relationship
-from app.db.base_class import Base
+from sqlalchemy.sql import func
+from app.db.base_class import Base  # Alterado
 
 class Audiobook(Base):
     __tablename__ = "audiobook"
@@ -12,6 +13,13 @@ class Audiobook(Base):
     error = Column(Text, nullable=True)
     audio_url = Column(String(255), nullable=True)
     
+    # Novos campos para melhor rastreamento
+    text_content = Column(Text, nullable=True)  # Primeiros caracteres do texto extraído
+    file_path = Column(String(500), nullable=True)  # Caminho do arquivo de áudio final
+    original_file_path = Column(String(500), nullable=True)  # Caminho do arquivo original enviado
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
     # Relacionamentos
     user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", back_populates="audiobooks") 
+    user = relationship("User", back_populates="audiobooks")

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Narração - Porta 8001</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste de Narração com Google Cloud TTS</h1>
+        <p style="color: #666;">Backend rodando na porta 8001</p>
+        
+        <input type="file" id="fileInput" accept=".txt,.pdf,.docx">
+        <br>
+        <button onclick="uploadFile()">Fazer Upload e Gerar Narração</button>
+        
+        <div id="status"></div>
+        <div id="audioContainer"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api/v1';
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const statusDiv = document.getElementById('status');
+            const audioContainer = document.getElementById('audioContainer');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '<p class="error">Por favor, selecione um arquivo!</p>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<p>Fazendo upload e processando...</p>';
+            audioContainer.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                // Primeiro, tentar sem autenticação (para teste)
+                let response = await fetch(`${API_URL}/audiobooks/`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                let authData = null;
+                
+                if (response.status === 401) {
+                    // Se precisar de autenticação, fazer login
+                    statusDiv.innerHTML += '<p>Fazendo login...</p>';
+                    
+                    const loginResponse = await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: 'teste' + Date.now() + '@example.com',
+                            password: 'test123',
+                            full_name: 'Teste Narração'
+                        })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const userData = await loginResponse.json();
+                        
+                        // Fazer login
+                        const authResponse = await fetch(`${API_URL}/auth/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `username=${userData.email}&password=test123`
+                        });
+                        
+                        if (authResponse.ok) {
+                            authData = await authResponse.json();
+                            
+                            // Tentar upload novamente com token
+                            response = await fetch(`${API_URL}/audiobooks/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${authData.access_token}`
+                                },
+                                body: formData
+                            });
+                        }
+                    }
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = '<p class="success">Upload realizado! Aguardando processamento...</p>';
+                    
+                    // Verificar status
+                    checkStatus(data.id, authData ? authData.access_token : null);
+                } else {
+                    const error = await response.text();
+                    statusDiv.innerHTML = `<p class="error">Erro: ${error}</p>`;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">Erro de conexão: ${error.message}<br>Verifique se o backend está rodando na porta 8001</p>`;
+            }
+        }
+        
+        async function checkStatus(audiobookId, token) {
+            const statusDiv = document.getElementById('status');
+            const audioContainer = document.getElementById('audioContainer');
+            
+            const interval = setInterval(async () => {
+                try {
+                    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                    const response = await fetch(`${API_URL}/audiobooks/${audiobookId}`, {
+                        headers
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.status === 'completed' && data.audio_url) {
+                            clearInterval(interval);
+                            statusDiv.innerHTML = '<p class="success">Narração gerada com sucesso!</p>';
+                            audioContainer.innerHTML = `
+                                <h3>Áudio gerado:</h3>
+                                <audio controls src="${data.audio_url}"></audio>
+                                <br><br>
+                                <a href="${data.audio_url}" download>Baixar áudio</a>
+                            `;
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            statusDiv.innerHTML = `<p class="error">Erro no processamento: ${data.error}</p>`;
+                        } else {
+                            statusDiv.innerHTML = `<p>Processando... ${data.progress || 0}%</p>`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar status:', error);
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html> 
